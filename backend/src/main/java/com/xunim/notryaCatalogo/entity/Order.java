@@ -18,7 +18,7 @@ public class Order {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id; // Long em vez de long
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
