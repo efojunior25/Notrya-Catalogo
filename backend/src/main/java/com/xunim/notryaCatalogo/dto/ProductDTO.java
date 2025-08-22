@@ -1,6 +1,6 @@
-package com.xunim.catalogo.dto;
+package com.xunim.notryaCatalogo.dto;
 
-import com.xunim.catalogo.entity.Product;
+import com.xunim.notryaCatalogo.entity.Product;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

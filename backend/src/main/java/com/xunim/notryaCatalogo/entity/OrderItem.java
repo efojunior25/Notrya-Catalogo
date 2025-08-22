@@ -1,4 +1,4 @@
-package com.xunim.catalogo.entity;
+package com.xunim.notryaCatalogo.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

@@ -1,9 +1,9 @@
-package com.xunim.catalogo.service;
+package com.xunim.notryaCatalogo.service;
 
-import com.xunim.catalogo.dto.ProductDTO;
-import com.xunim.catalogo.dto.ProductPageDTO;
-import com.xunim.catalogo.entity.Product;
-import com.xunim.catalogo.repository.ProductRepository;
+import com.xunim.notryaCatalogo.dto.ProductDTO;
+import com.xunim.notryaCatalogo.dto.ProductPageDTO;
+import com.xunim.notryaCatalogo.entity.Product;
+import com.xunim.notryaCatalogo.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

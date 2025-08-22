@@ -1,6 +1,6 @@
-package com.xunim.catalogo.repository;
+package com.xunim.notryaCatalogo.repository;
 
-import com.xunim.catalogo.entity.Order;
+import com.xunim.notryaCatalogo.entity.Order;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

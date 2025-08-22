@@ -1,7 +1,7 @@
-package com.xunim.catalogo.controller;
+package com.xunim.notryaCatalogo.controller;
 
-import com.xunim.catalogo.dto.ProductPageDTO;
-import com.xunim.catalogo.service.ProductService;
+import com.xunim.notryaCatalogo.dto.ProductPageDTO;
+import com.xunim.notryaCatalogo.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

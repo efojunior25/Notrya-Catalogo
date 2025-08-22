@@ -1,6 +1,6 @@
-package com.xunim.catalogo.exception;
+package com.xunim.notryaCatalogo.exception;
 
-import com.xunim.catalogo.dto.StockErrorDTO;
+import com.xunim.notryaCatalogo.dto.StockErrorDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;

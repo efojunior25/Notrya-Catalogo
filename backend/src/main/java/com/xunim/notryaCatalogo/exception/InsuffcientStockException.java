@@ -1,6 +1,6 @@
-package com.xunim.catalogo.exception;
+package com.xunim.notryaCatalogo.exception;
 
-import com.xunim.catalogo.dto.StockErrorDTO;
+import com.xunim.notryaCatalogo.dto.StockErrorDTO;
 import lombok.Getter;
 
 import java.util.List;

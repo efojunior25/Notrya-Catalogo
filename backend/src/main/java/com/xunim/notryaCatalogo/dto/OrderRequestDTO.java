@@ -1,4 +1,4 @@
-package com.xunim.catalogo.dto;
+package com.xunim.notryaCatalogo.dto;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;

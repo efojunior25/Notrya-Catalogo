@@ -1,4 +1,4 @@
-package com.xunim.catalogo;
+package com.xunim.notryaCatalogo;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

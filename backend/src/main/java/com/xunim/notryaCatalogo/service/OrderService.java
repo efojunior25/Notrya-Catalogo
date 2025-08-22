@@ -1,12 +1,12 @@
-package com.xunim.catalogo.service;
+package com.xunim.notryaCatalogo.service;
 
-import com.xunim.catalogo.dto.*;
-import com.xunim.catalogo.entity.Order;
-import com.xunim.catalogo.entity.OrderItem;
-import com.xunim.catalogo.entity.Product;
-import com.xunim.catalogo.exception.InsuffcientStockException;
-import com.xunim.catalogo.repository.OrderRepository;
-import com.xunim.catalogo.repository.ProductRepository;
+import com.xunim.notryaCatalogo.dto.*;
+import com.xunim.notryaCatalogo.entity.Order;
+import com.xunim.notryaCatalogo.entity.OrderItem;
+import com.xunim.notryaCatalogo.entity.Product;
+import com.xunim.notryaCatalogo.exception.InsuffcientStockException;
+import com.xunim.notryaCatalogo.repository.OrderRepository;
+import com.xunim.notryaCatalogo.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

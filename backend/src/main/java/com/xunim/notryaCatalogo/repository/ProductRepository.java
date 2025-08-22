@@ -1,6 +1,6 @@
-package com.xunim.catalogo.repository;
+package com.xunim.notryaCatalogo.repository;
 
-import com.xunim.catalogo.entity.Product;
+import com.xunim.notryaCatalogo.entity.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

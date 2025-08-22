@@ -1,8 +1,8 @@
-package com.xunim.catalogo.controller;
+package com.xunim.notryaCatalogo.controller;
 
-import com.xunim.catalogo.dto.OrderRequestDTO;
-import com.xunim.catalogo.dto.OrderResponseDTO;
-import com.xunim.catalogo.service.OrderService;
+import com.xunim.notryaCatalogo.dto.OrderRequestDTO;
+import com.xunim.notryaCatalogo.dto.OrderResponseDTO;
+import com.xunim.notryaCatalogo.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
