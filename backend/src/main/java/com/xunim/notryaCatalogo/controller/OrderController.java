@@ -1,7 +1,7 @@
 package com.xunim.notryaCatalogo.controller;
 
-import com.xunim.notryaCatalogo.dto.OrderRequestDTO;
-import com.xunim.notryaCatalogo.dto.OrderResponseDTO;
+import com.xunim.notryaCatalogo.dto.request.OrderRequestDTO;
+import com.xunim.notryaCatalogo.dto.response.OrderResponseDTO;
 import com.xunim.notryaCatalogo.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

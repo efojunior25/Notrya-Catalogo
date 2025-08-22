@@ -4,8 +4,16 @@ import './App.css';
 interface Product {
     id: number;
     name: string;
+    description?: string;
     price: number;
     stock: number;
+    category: string;
+    size: string;
+    color: string;
+    brand?: string;
+    material?: string;
+    gender: string;
+    imageUrl?: string;
     active: boolean;
 }
 
@@ -55,9 +63,43 @@ interface OrderResponse {
     }>;
 }
 
+interface User {
+    username: string;
+    fullName: string;
+    email: string;
+}
+
+interface LoginRequest {
+    username: string;
+    password: string;
+}
+
+interface LoginResponse {
+    token: string;
+    type: string;
+    username: string;
+    fullName: string;
+    email: string;
+}
+
+interface ProductFormData {
+    name: string;
+    description: string;
+    price: number;
+    stock: number;
+    category: string;
+    size: string;
+    color: string;
+    brand: string;
+    material: string;
+    gender: string;
+    imageUrl: string;
+}
+
 const API_BASE_URL = 'http://localhost:8080/api/v1';
 
 function App() {
+    // Estados existentes
     const [products, setProducts] = useState<Product[]>([]);
     const [cart, setCart] = useState<CartItem[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -68,7 +110,210 @@ function App() {
     const [message, setMessage] = useState<{ type: 'success' | 'error', content: string } | null>(null);
     const [stockErrors, setStockErrors] = useState<StockError[]>([]);
 
+    // Novos estados para autenticação e administração
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [user, setUser] = useState<User | null>(null);
+    const [isLoginOpen, setIsLoginOpen] = useState(false);
+    const [isAdminMode, setIsAdminMode] = useState(false);
+    const [isProductFormOpen, setIsProductFormOpen] = useState(false);
+    const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+    const [loginForm, setLoginForm] = useState<LoginRequest>({ username: '', password: '' });
+    const [productForm, setProductForm] = useState<ProductFormData>({
+        name: '',
+        description: '',
+        price: 0,
+        stock: 0,
+        category: '',
+        size: '',
+        color: '',
+        brand: '',
+        material: '',
+        gender: '',
+        imageUrl: ''
+    });
+
     const PAGE_SIZE = 6;
+
+    // Verificar se usuário está logado ao carregar a página
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            validateToken(token);
+        }
+    }, []);
+
+    const validateToken = async (token: string) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/auth/validate`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const userData = JSON.parse(localStorage.getItem('user') || '{}');
+                setUser(userData);
+                setIsAuthenticated(true);
+            } else {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+            }
+        } catch (error) {
+            console.error('Erro na validação do token:', error);
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+        }
+    };
+
+    const login = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(loginForm)
+            });
+
+            if (!response.ok) {
+                throw new Error('Credenciais inválidas');
+            }
+
+            const loginResponse: LoginResponse = await response.json();
+
+            localStorage.setItem('token', loginResponse.token);
+            localStorage.setItem('user', JSON.stringify({
+                username: loginResponse.username,
+                fullName: loginResponse.fullName,
+                email: loginResponse.email
+            }));
+
+            setUser({
+                username: loginResponse.username,
+                fullName: loginResponse.fullName,
+                email: loginResponse.email
+            });
+            setIsAuthenticated(true);
+            setIsLoginOpen(false);
+            setLoginForm({ username: '', password: '' });
+            setMessage({ type: 'success', content: 'Login realizado com sucesso!' });
+        } catch (error) {
+            console.error('Erro no login:', error);
+            setMessage({ type: 'error', content: 'Erro no login. Verifique suas credenciais.' });
+        }
+    };
+
+    const logout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setUser(null);
+        setIsAuthenticated(false);
+        setIsAdminMode(false);
+        setMessage({ type: 'success', content: 'Logout realizado com sucesso!' });
+    };
+
+    const getAuthHeaders = () => {
+        const token = localStorage.getItem('token');
+        return {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        };
+    };
+
+    const handleProductSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const url = editingProduct
+                ? `${API_BASE_URL}/admin/products/${editingProduct.id}`
+                : `${API_BASE_URL}/admin/products`;
+
+            const method = editingProduct ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method,
+                headers: getAuthHeaders(),
+                body: JSON.stringify(productForm)
+            });
+
+            if (!response.ok) {
+                throw new Error('Erro ao salvar produto');
+            }
+
+            const savedProduct: Product = await response.json();
+
+            if (editingProduct) {
+                setMessage({ type: 'success', content: 'Produto atualizado com sucesso!' });
+            } else {
+                setMessage({ type: 'success', content: 'Produto criado com sucesso!' });
+            }
+
+            setIsProductFormOpen(false);
+            setEditingProduct(null);
+            setProductForm({
+                name: '',
+                description: '',
+                price: 0,
+                stock: 0,
+                category: '',
+                size: '',
+                color: '',
+                brand: '',
+                material: '',
+                gender: '',
+                imageUrl: ''
+            });
+
+            // Recarregar produtos
+            fetchProducts(searchTerm, currentPage);
+        } catch (error) {
+            console.error('Erro ao salvar produto:', error);
+            setMessage({ type: 'error', content: 'Erro ao salvar produto' });
+        }
+    };
+
+    const handleEditProduct = (product: Product) => {
+        setEditingProduct(product);
+        setProductForm({
+            name: product.name,
+            description: product.description || '',
+            price: product.price,
+            stock: product.stock,
+            category: product.category,
+            size: product.size,
+            color: product.color,
+            brand: product.brand || '',
+            material: product.material || '',
+            gender: product.gender,
+            imageUrl: product.imageUrl || ''
+        });
+        setIsProductFormOpen(true);
+    };
+
+    const handleDeleteProduct = async (id: number) => {
+        if (!window.confirm('Tem certeza que deseja excluir este produto?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/admin/products/${id}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
+
+            if (!response.ok) {
+                throw new Error('Erro ao excluir produto');
+            }
+
+            setMessage({ type: 'success', content: 'Produto excluído com sucesso!' });
+            fetchProducts(searchTerm, currentPage);
+        } catch (error) {
+            console.error('Erro ao excluir produto:', error);
+            setMessage({ type: 'error', content: 'Erro ao excluir produto' });
+        }
+    };
 
     const fetchProducts = useCallback(async (search: string, page: number) => {
         setIsLoading(true);
@@ -83,7 +328,6 @@ function App() {
 
             const data: ProductPage = await response.json();
             setProducts(data.content);
-            // @ts-ignore
             setTotalPages(data.totalPages);
         } catch (error) {
             console.error('Erro ao buscar produtos: ', error);
@@ -96,7 +340,7 @@ function App() {
     useEffect(() => {
         const timeoutId = setTimeout(() => {
             setCurrentPage(0);
-            fetchProducts(searchTerm,0);
+            fetchProducts(searchTerm, 0);
         }, 300);
 
         return () => clearTimeout(timeoutId);
@@ -106,6 +350,7 @@ function App() {
         fetchProducts(searchTerm, currentPage);
     }, [currentPage, searchTerm, fetchProducts]);
 
+    // Funções existentes do carrinho (mantidas como estavam)
     const addToCart = (product: Product) => {
         setCart(prevCart => {
             const existingItem = prevCart.find(item => item.productId === product.id);
@@ -116,9 +361,9 @@ function App() {
                     return prevCart;
                 }
                 return prevCart.map(item =>
-                item.productId === product.id
-                ? { ...item, quantity: item.quantity + 1 }
-                : item
+                    item.productId === product.id
+                        ? { ...item, quantity: item.quantity + 1 }
+                        : item
                 );
             } else {
                 if (product.stock === 0) {
@@ -150,9 +395,9 @@ function App() {
 
             if (existingItem && existingItem.quantity > 1) {
                 return prevCart.map(item =>
-                item.productId === productId
-                ? { ...item, quantity: item.quantity - 1}
-                : item
+                    item.productId === productId
+                        ? { ...item, quantity: item.quantity - 1}
+                        : item
                 );
             } else {
                 return prevCart.filter(item => item.productId !== productId);
@@ -185,6 +430,7 @@ function App() {
     const getCartTotal = () => {
         return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
     };
+
     const getCartItemCount = () => {
         return cart.reduce((total, item) => total + item.quantity, 0);
     };
@@ -239,22 +485,250 @@ function App() {
     };
 
     const clearMessage = () => {
-        setMessage(null)
+        setMessage(null);
         setStockErrors([]);
     };
+
+    // Listas para os selects
+    const categories = ['CAMISETA', 'CALCA', 'BERMUDA', 'SHORTS', 'VESTIDO', 'SAIA', 'BLUSA', 'JAQUETA', 'CASACO', 'TENIS', 'SAPATO', 'SANDALIA', 'BONE', 'CHAPEU', 'BOLSA', 'MOCHILA', 'CARTEIRA', 'CINTO'];
+    const sizes = ['PP', 'P', 'M', 'G', 'GG', 'XG', 'XXG', 'TAMANHO_34', 'TAMANHO_36', 'TAMANHO_38', 'TAMANHO_40', 'TAMANHO_42', 'TAMANHO_44', 'TAMANHO_46', 'TAMANHO_48', 'UNICO'];
+    const colors = ['AZUL', 'PRETO', 'BRANCO', 'VERMELHO', 'VERDE', 'AMARELO', 'ROSA', 'ROXO', 'LARANJA', 'MARROM', 'CINZA', 'BEGE', 'NAVY', 'VINHO', 'CREME', 'DOURADO', 'PRATEADO', 'MULTICOLOR'];
+    const genders = ['MASCULINO', 'FEMININO', 'UNISSEX'];
 
     return (
         <div className="app">
             <header className="app-header">
                 <h1>Catálogo de Produtos</h1>
-                <button
-                    className="cart-button"
-                    onClick={() => setIsCartOpen(!isCartOpen)}
-                    aria-label={`Abrir carrinho com ${getCartItemCount()} itens`}
-                >
-                    🛒 Carrinho ({getCartItemCount()})
-                </button>
+                <div className="header-controls">
+                    {!isAuthenticated ? (
+                        <button
+                            className="login-button"
+                            onClick={() => setIsLoginOpen(true)}
+                        >
+                            👤 Login
+                        </button>
+                    ) : (
+                        <div className="user-controls">
+                            <span className="user-welcome">Olá, {user?.fullName}</span>
+                            <button
+                                className={`admin-button ${isAdminMode ? 'active' : ''}`}
+                                onClick={() => setIsAdminMode(!isAdminMode)}
+                            >
+                                ⚙️ {isAdminMode ? 'Modo Cliente' : 'Modo Admin'}
+                            </button>
+                            <button className="logout-button" onClick={logout}>
+                                🚪 Sair
+                            </button>
+                        </div>
+                    )}
+                    <button
+                        className="cart-button"
+                        onClick={() => setIsCartOpen(!isCartOpen)}
+                        aria-label={`Abrir carrinho com ${getCartItemCount()} itens`}
+                    >
+                        🛒 Carrinho ({getCartItemCount()})
+                    </button>
+                </div>
             </header>
+
+            {/* Modal de Login */}
+            {isLoginOpen && (
+                <div className="modal-overlay">
+                    <div className="modal">
+                        <div className="modal-header">
+                            <h2>Login de Administrador</h2>
+                            <button onClick={() => setIsLoginOpen(false)}>❌</button>
+                        </div>
+                        <form onSubmit={login} className="login-form">
+                            <div className="form-group">
+                                <label>Usuário:</label>
+                                <input
+                                    type="text"
+                                    value={loginForm.username}
+                                    onChange={(e) => setLoginForm({...loginForm, username: e.target.value})}
+                                    required
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Senha:</label>
+                                <input
+                                    type="password"
+                                    value={loginForm.password}
+                                    onChange={(e) => setLoginForm({...loginForm, password: e.target.value})}
+                                    required
+                                />
+                            </div>
+                            <div className="form-actions">
+                                <button type="submit" className="submit-button">Entrar</button>
+                                <button type="button" onClick={() => setIsLoginOpen(false)} className="cancel-button">
+                                    Cancelar
+                                </button>
+                            </div>
+                        </form>
+                        <div className="login-help">
+                            <p><strong>Usuário padrão:</strong> admin</p>
+                            <p><strong>Senha padrão:</strong> admin123</p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal de Produto */}
+            {isProductFormOpen && (
+                <div className="modal-overlay">
+                    <div className="modal large-modal">
+                        <div className="modal-header">
+                            <h2>{editingProduct ? 'Editar Produto' : 'Novo Produto'}</h2>
+                            <button onClick={() => setIsProductFormOpen(false)}>❌</button>
+                        </div>
+                        <form onSubmit={handleProductSubmit} className="product-form">
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Nome*:</label>
+                                    <input
+                                        type="text"
+                                        value={productForm.name}
+                                        onChange={(e) => setProductForm({...productForm, name: e.target.value})}
+                                        required
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label>Preço*:</label>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        min="0.01"
+                                        value={productForm.price}
+                                        onChange={(e) => setProductForm({...productForm, price: parseFloat(e.target.value) || 0})}
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="form-group">
+                                <label>Descrição:</label>
+                                <textarea
+                                    value={productForm.description}
+                                    onChange={(e) => setProductForm({...productForm, description: e.target.value})}
+                                    rows={3}
+                                />
+                            </div>
+
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Estoque*:</label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        value={productForm.stock}
+                                        onChange={(e) => setProductForm({...productForm, stock: parseInt(e.target.value) || 0})}
+                                        required
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label>Categoria*:</label>
+                                    <select
+                                        value={productForm.category}
+                                        onChange={(e) => setProductForm({...productForm, category: e.target.value})}
+                                        required
+                                    >
+                                        <option value="">Selecione...</option>
+                                        {categories.map(cat => (
+                                            <option key={cat} value={cat}>{cat}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Tamanho*:</label>
+                                    <select
+                                        value={productForm.size}
+                                        onChange={(e) => setProductForm({...productForm, size: e.target.value})}
+                                        required
+                                    >
+                                        <option value="">Selecione...</option>
+                                        {sizes.map(size => (
+                                            <option key={size} value={size}>{size}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label>Cor*:</label>
+                                    <select
+                                        value={productForm.color}
+                                        onChange={(e) => setProductForm({...productForm, color: e.target.value})}
+                                        required
+                                    >
+                                        <option value="">Selecione...</option>
+                                        {colors.map(color => (
+                                            <option key={color} value={color}>{color}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Gênero*:</label>
+                                    <select
+                                        value={productForm.gender}
+                                        onChange={(e) => setProductForm({...productForm, gender: e.target.value})}
+                                        required
+                                    >
+                                        <option value="">Selecione...</option>
+                                        {genders.map(gender => (
+                                            <option key={gender} value={gender}>{gender}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label>Marca:</label>
+                                    <input
+                                        type="text"
+                                        value={productForm.brand}
+                                        onChange={(e) => setProductForm({...productForm, brand: e.target.value})}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Material:</label>
+                                    <input
+                                        type="text"
+                                        value={productForm.material}
+                                        onChange={(e) => setProductForm({...productForm, material: e.target.value})}
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label>URL da Imagem:</label>
+                                    <input
+                                        type="url"
+                                        value={productForm.imageUrl}
+                                        onChange={(e) => setProductForm({...productForm, imageUrl: e.target.value})}
+                                        placeholder="https://exemplo.com/imagem.jpg"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="form-actions">
+                                <button type="submit" className="submit-button">
+                                    {editingProduct ? 'Atualizar' : 'Criar'} Produto
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsProductFormOpen(false)}
+                                    className="cancel-button"
+                                >
+                                    Cancelar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             {message && (
                 <div className={`message ${message.type}`}>
@@ -277,7 +751,7 @@ function App() {
                                 {error.productName || `Produto ${error.productId}`}:
                                 apenas {error.available} disponível(is)
                             </li>
-                            ))}
+                        ))}
                     </ul>
                 </div>
             )}
@@ -292,6 +766,14 @@ function App() {
                         className="search-input"
                         aria-label="Buscar produtos"
                     />
+                    {isAdminMode && (
+                        <button
+                            className="add-product-button"
+                            onClick={() => setIsProductFormOpen(true)}
+                        >
+                            ➕ Novo Produto
+                        </button>
+                    )}
                 </div>
 
                 <div className="products-container">
@@ -302,19 +784,58 @@ function App() {
                             <div className="products-grid">
                                 {products.map(product => (
                                     <div key={product.id} className="product-card">
+                                        {isAdminMode && (
+                                            <div className="admin-controls">
+                                                <button
+                                                    className="edit-button"
+                                                    onClick={() => handleEditProduct(product)}
+                                                    title="Editar produto"
+                                                >
+                                                    ✏️
+                                                </button>
+                                                <button
+                                                    className="delete-button"
+                                                    onClick={() => handleDeleteProduct(product.id)}
+                                                    title="Excluir produto"
+                                                >
+                                                    🗑️
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {product.imageUrl && (
+                                            <div className="product-image">
+                                                <img src={product.imageUrl} alt={product.name} />
+                                            </div>
+                                        )}
+
                                         <h3>{product.name}</h3>
+                                        {product.description && (
+                                            <p className="product-description">{product.description}</p>
+                                        )}
                                         <p className="product-price">R$ {product.price.toFixed(2)}</p>
+                                        <div className="product-details">
+                                            <span className="product-category">{product.category}</span>
+                                            <span className="product-size">{product.size}</span>
+                                            <span className="product-color">{product.color}</span>
+                                        </div>
+                                        {product.brand && (
+                                            <p className="product-brand">{product.brand}</p>
+                                        )}
                                         <p className="product-stock">
                                             Estoque: {product.stock} unidade(s)
                                         </p>
-                                        <button
-                                            onClick={() => addToCart(product)}
-                                            disabled={product.stock === 0}
-                                            className="add-to-cart-btn"
-                                            aria-label={`Adicionar ${product.name} ao carrinho`}
-                                        >
-                                            {product.stock === 0 ? 'Fora de Estoque' : 'Adicionar ao Carrinho'}
-                                        </button>
+
+                                        {!isAdminMode && (
+                                            <button
+                                                onClick={() => addToCart(product)}
+                                                disabled={product.stock === 0}
+                                                className="add-to-cart-btn"
+                                                aria-label={`Adicionar ${product.name} ao carrinho`}
+                                            >
+                                                {product.stock === 0 ? 'Fora de Estoque' : 'Adicionar ao Carrinho'}
+                                            </button>
+                                        )}
                                     </div>
                                 ))}
                             </div>
@@ -324,11 +845,11 @@ function App() {
                                     onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
                                     disabled={currentPage === 0}
                                     aria-label="Página anterior"
-                                    >
+                                >
                                     Anterior
                                 </button>
                                 <span>
-                                    Página {currentPage +1} de {totalPages}
+                                    Página {currentPage + 1} de {totalPages}
                                 </span>
                                 <button
                                     onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
@@ -343,6 +864,7 @@ function App() {
                 </div>
             </main>
 
+            {/* Carrinho (mantido como estava) */}
             {isCartOpen && (
                 <div className="cart-overlay">
                     <div className="cart-sidebar">
@@ -371,7 +893,7 @@ function App() {
                                                     onClick={() => removeFromCart(item.productId)}
                                                     aria-label={`Diminuir quantidade de ${item.productName}`}
                                                 >
-                                                 -
+                                                    -
                                                 </button>
                                                 <span>{item.quantity}</span>
                                                 <button
@@ -380,11 +902,15 @@ function App() {
                                                         name: item.productName,
                                                         price: item.price,
                                                         stock: item.stock,
-                                                        active: true
+                                                        active: true,
+                                                        category: '',
+                                                        size: '',
+                                                        color: '',
+                                                        gender: ''
                                                     })}
                                                     disabled={item.quantity >= item.stock}
                                                     aria-label={`Adicionar quantidade de ${item.productName}`}
-                                                    >
+                                                >
                                                     +
                                                 </button>
                                             </div>
@@ -396,7 +922,7 @@ function App() {
                                                 className="remove-item"
                                                 aria-label={`Remover ${item.productName} do carrinho`}
                                             >
-                                             Remover
+                                                Remover
                                             </button>
                                         </div>
                                     ))}

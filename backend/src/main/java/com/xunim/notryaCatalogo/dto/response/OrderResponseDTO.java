@@ -1,4 +1,4 @@
-package com.xunim.notryaCatalogo.dto;
+package com.xunim.notryaCatalogo.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
