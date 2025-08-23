@@ -15,8 +15,8 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(InsuffcientStockException.class)
-    public ResponseEntity<List<StockErrorDTO>> handleInssuficientStock(InsuffcientStockException ex) {
+    @ExceptionHandler(InsufficientStockException.class)
+    public ResponseEntity<List<StockErrorDTO>> handleInssuficientStock(InsufficientStockException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getStockErrors());
     }
 

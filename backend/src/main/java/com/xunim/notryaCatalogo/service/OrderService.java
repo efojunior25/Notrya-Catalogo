@@ -8,7 +8,7 @@ import com.xunim.notryaCatalogo.dto.response.OrderResponseDTO;
 import com.xunim.notryaCatalogo.entity.Order;
 import com.xunim.notryaCatalogo.entity.OrderItem;
 import com.xunim.notryaCatalogo.entity.Product;
-import com.xunim.notryaCatalogo.exception.InsuffcientStockException;
+import com.xunim.notryaCatalogo.exception.InsufficientStockException;
 import com.xunim.notryaCatalogo.repository.OrderRepository;
 import com.xunim.notryaCatalogo.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
@@ -57,7 +57,7 @@ public class OrderService {
         }
 
         if(!stockErrors.isEmpty()) {
-            throw new InsuffcientStockException(stockErrors);
+            throw new InsufficientStockException(stockErrors);
         }
 
         Order order = new Order();

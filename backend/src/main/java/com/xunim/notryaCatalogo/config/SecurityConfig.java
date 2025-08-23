@@ -58,8 +58,30 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
-                        // TEMPORARIAMENTE - permita TUDO para testar
-                        .anyRequest().permitAll()
+                        // Endpoints públicos - autenticação
+                        .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
+
+                        // Endpoints públicos - produtos (apenas leitura)
+                        .requestMatchers(HttpMethod.GET, "/products/**").permitAll()
+
+                        // Endpoints públicos - pedidos
+                        .requestMatchers(HttpMethod.POST, "/orders").permitAll()
+
+                        // Endpoints públicos - imagens (visualização)
+                        .requestMatchers(HttpMethod.GET, "/uploads/images/**").permitAll()
+
+                        // Endpoints que requerem autenticação
+                        .requestMatchers(HttpMethod.POST, "/auth/validate").authenticated()
+
+                        // Endpoints de upload - SOMENTE ADMIN
+                        .requestMatchers(HttpMethod.POST, "/uploads/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/uploads/**").hasRole("ADMIN")
+
+                        // Endpoints administrativos - SOMENTE ADMIN
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+
+                        // Todos os outros endpoints requerem autenticação
+                        .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -73,16 +95,16 @@ public class SecurityConfig {
         configuration.setAllowedOriginPatterns(List.of(
                 "http://localhost:4200",
                 "http://localhost:3000",
-                "http://localhost:8080",  // Adicione esta linha
+                "http://localhost:8080",
                 "http://127.0.0.1:4200",
                 "http://127.0.0.1:3000",
-                "http://127.0.0.1:8080"   // Adicione esta linha
+                "http://127.0.0.1:8080"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
-        configuration.setMaxAge(3600L); // 1 hora
+        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
