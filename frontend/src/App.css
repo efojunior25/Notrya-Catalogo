@@ -884,3 +884,165 @@ button:focus, input:focus {
 button:focus:not(:focus-visible) {
     outline: none;
 }
+
+/* === ESTILOS PARA UPLOAD DE IMAGEM === */
+.image-upload-container {
+    border: 2px dashed #e0e0e0;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+    transition: border-color 0.3s ease;
+}
+
+.image-upload-container:hover {
+    border-color: #667eea;
+}
+
+.upload-area {
+    padding: 2rem 1rem;
+}
+
+.upload-label {
+    display: inline-block;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    margin-bottom: 1rem;
+}
+
+.upload-label:hover:not([disabled]) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.upload-label[disabled] {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.upload-hint {
+    color: #666;
+    font-size: 0.9rem;
+    margin: 0.5rem 0 0 0;
+}
+
+.image-preview {
+    position: relative;
+    display: inline-block;
+}
+
+.preview-image {
+    max-width: 200px;
+    max-height: 200px;
+    width: auto;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    display: block;
+    margin: 0 auto 1rem auto;
+}
+
+.image-actions {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.remove-image-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.remove-image-btn:hover:not(:disabled) {
+    background: #c82333;
+    transform: translateY(-1px);
+}
+
+.remove-image-btn:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+}
+
+/* Melhorias na exibição de imagens nos cards */
+.product-image {
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.product-image img:hover {
+    transform: scale(1.05);
+}
+
+.product-image.no-image {
+    background: linear-gradient(45deg, #f8f9fa 25%, transparent 25%),
+    linear-gradient(-45deg, #f8f9fa 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #f8f9fa 75%),
+    linear-gradient(-45deg, transparent 75%, #f8f9fa 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    color: #666;
+    font-size: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Responsividade para upload de imagem */
+@media (max-width: 768px) {
+    .upload-area {
+        padding: 1.5rem 0.5rem;
+    }
+
+    .preview-image {
+        max-width: 150px;
+        max-height: 150px;
+    }
+
+    .upload-label {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .preview-image {
+        max-width: 120px;
+        max-height: 120px;
+    }
+
+    .image-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .remove-image-btn {
+        width: 100%;
+        max-width: 200px;
+    }
+}
