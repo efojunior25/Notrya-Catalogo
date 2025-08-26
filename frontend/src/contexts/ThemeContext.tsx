@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { ThemeProvider as StyledThemeProvider } from 'styled-components';
 import { theme } from '../styles/theme';
@@ -10,6 +11,42 @@ interface ThemeContextType {
 }
 
 const ThemeContext = createContext<ThemeContextType | null>(null);
+
+// Definir cores específicas para cada modo
+const themeColors = {
+    light: {
+        background: {
+            primary: '#FFFFFF',
+            secondary: '#F8F9FA',
+            tertiary: '#F1F3F4',
+        },
+        text: {
+            primary: '#202124',
+            secondary: '#5F6368',
+            tertiary: '#80868B',
+        },
+        border: {
+            default: '#DADCE0',
+            light: '#E8EAED',
+        },
+    },
+    dark: {
+        background: {
+            primary: '#1a1a1a',
+            secondary: '#2d2d2d',
+            tertiary: '#404040',
+        },
+        text: {
+            primary: '#ffffff',
+            secondary: '#cccccc',
+            tertiary: '#999999',
+        },
+        border: {
+            default: '#404040',
+            light: '#555555',
+        },
+    },
+} as const;
 
 export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [mode, setMode] = useState<ThemeMode>('light');
@@ -38,29 +75,13 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         ...theme,
         colors: {
             ...theme.colors,
-            // Override colors based on theme mode
-            ...(mode === 'dark' && {
-                background: {
-                    primary: '#1a1a1a',
-                    secondary: '#2d2d2d',
-                    tertiary: '#404040',
-                },
-                text: {
-                    primary: '#ffffff',
-                    secondary: '#cccccc',
-                    tertiary: '#999999',
-                },
-                border: {
-                    default: '#404040',
-                    light: '#555555',
-                },
-            }),
+            ...themeColors[mode],
         },
     };
 
     return (
         <ThemeContext.Provider value={{ mode, toggleTheme }}>
-            <StyledThemeProvider theme={currentTheme}>
+            <StyledThemeProvider theme={currentTheme as any}>
                 {children}
             </StyledThemeProvider>
         </ThemeContext.Provider>

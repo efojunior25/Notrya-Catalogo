@@ -1,68 +1,55 @@
 import styled from 'styled-components';
-import { theme } from '../../../styles/theme';
 
 interface InputStyleProps {
-    hasError: boolean;
-    fullWidth: boolean;
+    $fullWidth?: boolean;
+    $hasError?: boolean;
 }
 
-export const InputContainer = styled.div<{ fullWidth: boolean }>`
+export const InputContainer = styled.div`
     display: flex;
     flex-direction: column;
-    gap: ${theme.spacing[1]};
-    width: ${({ fullWidth }) => fullWidth ? '100%' : 'auto'};
+    gap: ${({ theme }) => theme.spacing[2]};
 `;
 
-export const Label = styled.label<{ hasError: boolean }>`
-    font-family: ${theme.typography.fontFamily.primary};
-    font-weight: ${theme.typography.fontWeight.medium};
-    font-size: ${theme.typography.fontSize.sm};
-    color: ${({ hasError }) =>
-            hasError ? theme.colors.error : theme.colors.neutral.gray[700]};
-    margin-bottom: ${theme.spacing[1]};
+export const InputLabel = styled.label`
+    font-size: ${({ theme }) => theme.typography.fontSize.sm};
+    font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+    color: ${({ theme }) => theme.colors.text.primary};
 `;
 
 export const StyledInput = styled.input<InputStyleProps>`
-    padding: ${theme.spacing[3]} ${theme.spacing[4]};
-    border: 2px solid ${({ hasError }) =>
-            hasError ? theme.colors.error : theme.colors.neutral.gray[300]};
-    border-radius: ${theme.borderRadius.md};
-    font-family: ${theme.typography.fontFamily.primary};
-    font-size: ${theme.typography.fontSize.base};
-    background-color: ${theme.colors.neutral.white};
+    width: ${({ $fullWidth }) => $fullWidth ? '100%' : 'auto'};
+    padding: ${({ theme }) => theme.spacing[3]} ${({ theme }) => theme.spacing[4]};
+    border: 2px solid ${({ $hasError, theme }) =>
+    $hasError ? theme.colors.primary.main : theme.colors.border.default
+};
+    border-radius: ${({ theme }) => theme.borderRadius.md};
+    font-size: ${({ theme }) => theme.typography.fontSize.base};
+    font-family: ${({ theme }) => theme.typography.fontFamily.primary};
+    color: ${({ theme }) => theme.colors.text.primary};
+    background: ${({ theme }) => theme.colors.background.primary};
     transition: all 0.2s ease-in-out;
-    width: ${({ fullWidth }) => fullWidth ? '100%' : 'auto'};
     box-sizing: border-box;
 
     &:focus {
         outline: none;
-        border-color: ${({ hasError }) =>
-                hasError ? theme.colors.error : theme.colors.primary.main};
-        box-shadow: 0 0 0 3px ${({ hasError }) =>
-                hasError ? 'rgba(220, 53, 69, 0.1)' : 'rgba(193, 24, 26, 0.1)'};
+        border-color: ${({ theme }) => theme.colors.primary.main};
+        box-shadow: 0 0 0 3px ${({ theme }) => theme.colors.primary.main}20;
     }
 
     &:disabled {
-        background-color: ${theme.colors.neutral.gray[100]};
-        color: ${theme.colors.neutral.gray[500]};
+        background: ${({ theme }) => theme.colors.background.secondary};
+        color: ${({ theme }) => theme.colors.text.tertiary};
         cursor: not-allowed;
     }
 
     &::placeholder {
-        color: ${theme.colors.neutral.gray[400]};
+        color: ${({ theme }) => theme.colors.text.secondary};
     }
 `;
 
-export const ErrorMessage = styled.span`
-    font-family: ${theme.typography.fontFamily.primary};
-    font-size: ${theme.typography.fontSize.sm};
-    color: ${theme.colors.error};
-    margin-top: ${theme.spacing[1]};
-`;
-
-export const HelperText = styled.span`
-    font-family: ${theme.typography.fontFamily.primary};
-    font-size: ${theme.typography.fontSize.sm};
-    color: ${theme.colors.neutral.gray[500]};
-    margin-top: ${theme.spacing[1]};
+export const InputError = styled.span`
+    color: ${({ theme }) => theme.colors.primary.main};
+    font-size: ${({ theme }) => theme.typography.fontSize.sm};
+    margin-top: ${({ theme }) => theme.spacing[1]};
 `;

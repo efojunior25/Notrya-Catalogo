@@ -1,5 +1,4 @@
-// frontend/src/pages/Home/Home.tsx - VERSÃO CORRIGIDA
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { HomeContainer, SearchSection, ProductsSection, PaginationWrapper } from './Home.styles';
 import { ProductGrid } from '../../components/product';
 import { Input, Button, Loading } from '../../components/common';
@@ -22,42 +21,19 @@ export const Home: React.FC<HomeProps> = ({
                                               onDeleteProduct,
                                               onOpenProductForm,
                                           }) => {
-    const [searchTerm, setSearchTerm] = useState('');
-    const [currentPage, setCurrentPage] = useState(0);
     const { state: authState } = useAuth();
 
+    // Hook que já controla busca, paginação e debounce
     const {
         products,
+        currentPage,
         totalPages,
         isLoading,
         error,
+        setCurrentPage,
+        setSearchTerm,
         refetch,
     } = useProducts(6); // 6 produtos por página
-
-    // Busca com debounce
-    useEffect(() => {
-        const timeoutId = setTimeout(() => {
-            setCurrentPage(0);
-            // @ts-ignore
-            refetch({
-                search: searchTerm,
-                page: 0,
-                size: 6,
-            });
-        }, 300);
-
-        return () => clearTimeout(timeoutId);
-    }, [searchTerm, refetch]);
-
-    // Atualizar produtos quando a página muda
-    useEffect(() => {
-        // @ts-ignore
-        refetch({
-            search: searchTerm,
-            page: currentPage,
-            size: 6,
-        });
-    }, [currentPage, refetch, searchTerm]);
 
     const handlePreviousPage = () => {
         setCurrentPage(prev => Math.max(0, prev - 1));
@@ -72,12 +48,7 @@ export const Home: React.FC<HomeProps> = ({
     };
 
     const handleRetry = () => {
-        // @ts-ignore
-        refetch({
-            search: searchTerm,
-            page: currentPage,
-            size: 6
-        });
+        refetch();
     };
 
     if (error) {
@@ -114,7 +85,6 @@ export const Home: React.FC<HomeProps> = ({
                 <Input
                     type="text"
                     placeholder="Buscar produtos por nome, categoria, cor..."
-                    value={searchTerm}
                     onChange={handleSearch}
                     fullWidth
                 />

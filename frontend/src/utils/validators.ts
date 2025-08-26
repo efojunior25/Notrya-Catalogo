@@ -1,3 +1,5 @@
+import { VALIDATION_RULES, PRODUCT_CATEGORIES } from './constants';
+
 export interface ValidationResult {
     isValid: boolean;
     message?: string;
@@ -52,6 +54,7 @@ export const validateUsername = (username: string): ValidationResult => {
             message: `Nome de usuário deve ter pelo menos ${VALIDATION_RULES.USERNAME_MIN_LENGTH} caracteres`
         };
     }
+
 
     const usernameRegex = /^[a-zA-Z0-9_]+$/;
     if (!usernameRegex.test(username)) {
@@ -142,12 +145,14 @@ export const validateFile = (file: File): ValidationResult => {
     }
 
     // Check file type
+    // @ts-ignore
     if (!VALIDATION_RULES.ALLOWED_IMAGE_TYPES.includes(file.type)) {
         return {
             isValid: false,
             message: 'Tipo de arquivo não permitido. Use JPG, PNG, GIF ou WebP'
         };
     }
+
 
     return { isValid: true };
 };

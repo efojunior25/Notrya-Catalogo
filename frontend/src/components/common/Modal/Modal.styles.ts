@@ -34,19 +34,8 @@ const modalSizes = {
     full: '95vw',
 };
 
-export const ModalOverlay = styled.div<ModalStyleProps>`
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: ${theme.zIndex.modal};
-    animation: ${fadeIn} 0.3s ease-out;
-    backdrop-filter: blur(4px);
+export const ModalOverlay = styled.div<{ $isOpen: boolean }>`
+    display: ${({ $isOpen }) => $isOpen ? 'flex' : 'none'};
 `;
 
 export const ModalContainer = styled.div<ModalStyleProps>`

@@ -18,8 +18,11 @@ class ProductService implements IProductService {
             size: size.toString(),
             search,
         });
+        console.log('Fetching products:', { search, page, size });
 
-        return apiClient.get<ProductPage>(`/products?${queryParams}`);
+        const data = await apiClient.get<ProductPage>(`/products?${queryParams}`);
+        console.log('Products received:', data);
+        return data;
     }
 
     async createProduct(product: ProductFormData): Promise<Product> {

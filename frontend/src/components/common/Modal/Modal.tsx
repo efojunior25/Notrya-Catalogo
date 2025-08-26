@@ -1,69 +1,80 @@
+
 import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import {
-    ModalOverlay,
-    ModalContainer,
-    ModalHeader,
-    ModalTitle,
-    CloseButton,
-    ModalContent,
-} from './Modal.styles';
+import { ModalOverlay, ModalContainer, ModalHeader, ModalTitle, CloseButton, ModalContent } from './Modal.styles';
 
-interface ModalProps {
+export interface ModalProps {
     isOpen: boolean;
     onClose: () => void;
     title?: string;
-    size?: 'small' | 'medium' | 'large' | 'full';
     children: React.ReactNode;
+    size?: 'small' | 'medium' | 'large';
 }
 
 export const Modal: React.FC<ModalProps> = ({
                                                 isOpen,
                                                 onClose,
                                                 title,
-                                                size = 'medium',
                                                 children,
+                                                size = 'medium'
                                             }) => {
     useEffect(() => {
-        const handleEscape = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') {
+        const handleEscapeKey = (event: KeyboardEvent) => {
+            if (event.key === 'Escape' && typeof onClose === 'function') {
                 onClose();
             }
         };
 
         if (isOpen) {
-            document.addEventListener('keydown', handleEscape);
+            // Salva o estado atual do overflow
+            const originalOverflow = document.body.style.overflow;
+            document.addEventListener('keydown', handleEscapeKey);
             document.body.style.overflow = 'hidden';
+
+            return () => {
+                document.removeEventListener('keydown', handleEscapeKey);
+                // Restaura o estado original ou remove se estava vazio
+                if (originalOverflow) {
+                    document.body.style.overflow = originalOverflow;
+                } else {
+                    document.body.style.removeProperty('overflow');
+                }
+            };
         }
 
-        return () => {
-            document.removeEventListener('keydown', handleEscape);
-            document.body.style.overflow = 'unset';
-        };
-    }, [isOpen, onClose]);
-
-    if (!isOpen) return null;
+        // Cleanup vazio quando modal não está aberto
+        return () => {};
+    }, [isOpen]); // Remove onClose das dependências
 
     const handleOverlayClick = (event: React.MouseEvent<HTMLDivElement>) => {
-        if (event.target === event.currentTarget) {
+        if (event.target === event.currentTarget && typeof onClose === 'function') {
             onClose();
         }
     };
 
+    const handleCloseClick = () => {
+        if (typeof onClose === 'function') {
+            onClose();
+        }
+    };
+
+    if (!isOpen) return null;
+
     return ReactDOM.createPortal(
-        <ModalOverlay isOpen={isOpen} onClick={handleOverlayClick}>
+        <ModalOverlay $isOpen={isOpen} onClick={handleOverlayClick}>
             <ModalContainer size={size} onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}>
-            {(title || onClose) && (
+                {title && (
                     <ModalHeader>
-                        {title && <ModalTitle>{title}</ModalTitle>}
-                        <CloseButton onClick={onClose} aria-label="Fechar modal">
-                            ✕
-                        </CloseButton>
+                        <ModalTitle>{title}</ModalTitle>
+                        <CloseButton onClick={handleCloseClick}>✕</CloseButton>
                     </ModalHeader>
                 )}
-                <ModalContent>
-                    {children}
-                </ModalContent>
+                {!title && typeof onClose === 'function' && (
+                    <ModalHeader>
+                        <CloseButton onClick={handleCloseClick}>✕</CloseButton>
+                    </ModalHeader>
+                )}
+                <ModalContent>{children}</ModalContent>
             </ModalContainer>
         </ModalOverlay>,
         document.body

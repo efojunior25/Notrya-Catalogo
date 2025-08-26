@@ -1,33 +1,32 @@
 import React from 'react';
-import { StyledButton, LoadingSpinner } from './Button.styles';
+import { StyledButton } from './Button.styles';
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-    variant?: 'primary' | 'secondary' | 'outline' | 'danger';
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+    variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
     size?: 'small' | 'medium' | 'large';
-    loading?: boolean;
     fullWidth?: boolean;
-    children: React.ReactNode;
+    loading?: boolean;
 }
 
 export const Button: React.FC<ButtonProps> = ({
+                                                  children,
                                                   variant = 'primary',
                                                   size = 'medium',
-                                                  loading = false,
                                                   fullWidth = false,
+                                                  loading = false,
                                                   disabled,
-                                                  children,
                                                   ...props
                                               }) => {
     return (
         <StyledButton
-            variant={variant}
-            size={size}
-            fullWidth={fullWidth}
+            $variant={variant}
+            $size={size}
+            $fullWidth={fullWidth}
+            $loading={loading}
             disabled={disabled || loading}
             {...props}
         >
-            {loading && <LoadingSpinner size={size} />}
-            {children}
+            {loading ? 'Carregando...' : children}
         </StyledButton>
     );
 };

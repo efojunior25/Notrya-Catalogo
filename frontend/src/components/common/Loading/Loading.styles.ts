@@ -26,9 +26,9 @@ const spinnerSizes = {
     large: '56px',
 };
 
-export const Spinner = styled.div<{ size: string }>`
-    width: ${({ size }: { size: keyof typeof spinnerSizes }) => spinnerSizes[size]};
-    height: ${({ size }: { size: keyof typeof spinnerSizes }) => spinnerSizes[size]};
+export const Spinner = styled.div<{ size: keyof typeof spinnerSizes }>`
+    width: ${({ size }) => spinnerSizes[size]};
+    height: ${({ size }) => spinnerSizes[size]};
     border: 3px solid ${theme.colors.neutral.gray[200]};
     border-top: 3px solid ${theme.colors.primary.main};
     border-radius: 50%;

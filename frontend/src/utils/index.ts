@@ -1,3 +1,5 @@
+import { API_ENDPOINTS } from './constants';
+
 export {
     formatPrice,
     formatNumber,
@@ -97,6 +99,7 @@ export const getImageUrl = (imageUrl?: string, baseUrl?: string): string => {
     return `${base}${imageUrl}`;
 };
 
+
 export const copyToClipboard = async (text: string): Promise<boolean> => {
     try {
         if (navigator.clipboard) {
@@ -138,12 +141,14 @@ export const parseQueryString = (search: string): Record<string, string> => {
     const params = new URLSearchParams(search);
     const result: Record<string, string> = {};
 
-    for (const [key, value] of params) {
+    // Usar Array.from para compatibilidade
+    Array.from(params.entries()).forEach(([key, value]) => {
         result[key] = value;
-    }
+    });
 
     return result;
 };
+
 
 export const buildQueryString = (params: Record<string, any>): string => {
     const searchParams = new URLSearchParams();

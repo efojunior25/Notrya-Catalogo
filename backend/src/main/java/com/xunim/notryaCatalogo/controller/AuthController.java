@@ -8,6 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 @RequestMapping("auth")
 @RequiredArgsConstructor
@@ -23,7 +26,10 @@ public class AuthController {
     }
 
     @PostMapping("/validate")
-    public ResponseEntity<String> validateToken() {
-        return ResponseEntity.ok("Token válido");
+    public ResponseEntity<Map<String, Object>> validateToken() {
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "Token válido");
+        return ResponseEntity.ok(response);
     }
 }

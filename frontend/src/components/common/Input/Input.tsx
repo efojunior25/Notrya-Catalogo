@@ -1,45 +1,27 @@
-import React from 'react';
-import {
-    InputContainer,
-    Label,
-    StyledInput,
-    ErrorMessage,
-    HelperText,
-} from './Input.styles';
+import React, { forwardRef } from 'react';
+import { InputContainer, InputLabel, StyledInput, InputError } from './Input.styles';
 
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
     label?: string;
     error?: string;
-    helperText?: string;
     fullWidth?: boolean;
 }
 
-export const Input: React.FC<InputProps> = ({
-                                                label,
-                                                error,
-                                                helperText,
-                                                fullWidth = false,
-                                                id,
-                                                className,
-                                                ...props
-                                            }) => {
-    const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`;
+export const Input = forwardRef<HTMLInputElement, InputProps>(
+    ({ label, error, fullWidth, className, ...props }, ref) => {
+        return (
+            <InputContainer className={className}>
+                {label && <InputLabel htmlFor={props.id}>{label}</InputLabel>}
+                <StyledInput
+                    ref={ref}
+                    $fullWidth={fullWidth}
+                    $hasError={!!error}
+                    {...props}
+                />
+                {error && <InputError>{error}</InputError>}
+            </InputContainer>
+        );
+    }
+);
 
-    return (
-        <InputContainer className={className} fullWidth={fullWidth}>
-            {label && (
-                <Label htmlFor={inputId} hasError={!!error}>
-                    {label}
-                </Label>
-            )}
-            <StyledInput
-                id={inputId}
-                hasError={!!error}
-                fullWidth={fullWidth}
-                {...props}
-            />
-            {error && <ErrorMessage>{error}</ErrorMessage>}
-            {helperText && !error && <HelperText>{helperText}</HelperText>}
-        </InputContainer>
-    );
-};
+Input.displayName = 'Input';
