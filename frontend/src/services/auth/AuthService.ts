@@ -1,8 +1,7 @@
-// frontend/src/services/auth/AuthService.ts
 import { LoginRequest, User } from '../../types';
 import { apiClient } from '../api/client';
+import { jwtDecode } from 'jwt-decode';
 
-// Tipos específicos para AuthService
 export interface LoginResponse {
     token: string;
     type: string;
@@ -30,11 +29,33 @@ class AuthService implements IAuthService {
     private readonly TOKEN_KEY = 'token';
     private readonly USER_KEY = 'user';
 
+    private isTokenValid(token: string): boolean {
+        try {
+            // @ts-ignore
+            const decoded = jwtDecode<{ exp?: number }>(token);
+            if (!decoded.exp) return false;
+
+            const currentTime = Date.now() / 1000; // segundos
+            return decoded.exp > currentTime;
+        } catch (error) {
+            console.error('Invalid JWT token:', error);
+            return false;
+        }
+    }
+
     async login(credentials: LoginRequest): Promise<AuthResponse<LoginResponse>> {
         try {
             const response = await apiClient.post<LoginResponse>('/auth/login', credentials);
 
-            // Armazenar token e dados do usuário
+            // ✅ Valida token antes de salvar
+            if (!this.isTokenValid(response.token)) {
+                console.warn('Token inválido ou expirado recebido do backend');
+                return {
+                    success: false,
+                    message: 'Token inválido ou expirado. Tente novamente.'
+                };
+            }
+
             this.setToken(response.token);
             this.setUser({
                 username: response.username,
@@ -45,133 +66,58 @@ class AuthService implements IAuthService {
             return {
                 success: true,
                 data: response,
-                message: 'Login realizado com sucesso'
+                message: 'Login realizado com sucesso',
             };
         } catch (error: any) {
             console.error('Erro no login:', error);
-
             let message = 'Erro desconhecido no login';
             if (error.response?.status === 401) {
-                message = 'Credenciais inválidas';
-            } else if (error.response?.status === 404) {
-                message = 'Usuário não encontrado';
-            } else if (error.message) {
-                message = error.message;
+                message = 'Usuário ou senha inválidos';
+            } else if (error.response?.data?.message) {
+                message = error.response.data.message;
             }
-
-            return {
-                success: false,
-                message
-            };
+            return { success: false, message };
         }
     }
 
-    async validateToken(): Promise<AuthResponse> {
-        try {
-            const token = this.getToken();
-            if (!token) {
-                return {
-                    success: false,
-                    message: 'Token não encontrado'
-                };
-            }
-
-            await apiClient.post('/auth/validate');
-
-            return {
-                success: true,
-                message: 'Token válido'
-            };
-        } catch (error: any) {
-            console.error('Erro na validação do token:', error);
-
-            // Limpar dados inválidos
-            this.logout();
-
-            return {
-                success: false,
-                message: 'Token inválido ou expirado'
-            };
+    // ✅ Melhoria opcional — validar token armazenado
+    getToken(): string | null {
+        const token = localStorage.getItem(this.TOKEN_KEY);
+        if (token && this.isTokenValid(token)) {
+            return token;
         }
+        localStorage.removeItem(this.TOKEN_KEY);
+        return null;
     }
 
     logout(): void {
-        try {
-            localStorage.removeItem(this.TOKEN_KEY);
-            localStorage.removeItem(this.USER_KEY);
-        } catch (error) {
-            console.warn('Erro ao fazer logout:', error);
-        }
+        localStorage.removeItem(this.TOKEN_KEY);
+        localStorage.removeItem(this.USER_KEY);
+    }
+
+    setToken(token: string): void {
+        localStorage.setItem(this.TOKEN_KEY, token);
+    }
+
+    setUser(user: User): void {
+        localStorage.setItem(this.USER_KEY, JSON.stringify(user));
     }
 
     getCurrentUser(): User | null {
-        try {
-            const userJson = localStorage.getItem(this.USER_KEY);
-            if (!userJson) return null;
-
-            return JSON.parse(userJson) as User;
-        } catch (error) {
-            console.error('Erro ao recuperar usuário:', error);
-            return null;
-        }
-    }
-
-    getToken(): string | null {
-        try {
-            return localStorage.getItem(this.TOKEN_KEY);
-        } catch (error) {
-            console.error('Erro ao recuperar token:', error);
-            return null;
-        }
+        const user = localStorage.getItem(this.USER_KEY);
+        return user ? JSON.parse(user) : null;
     }
 
     isAuthenticated(): boolean {
+        return !!this.getToken();
+    }
+
+    async validateToken(): Promise<AuthResponse> {
         const token = this.getToken();
-        const user = this.getCurrentUser();
-        return !!(token && user);
-    }
-
-    // Métodos privados para facilitar manutenção
-    private setToken(token: string): void {
-        try {
-            localStorage.setItem(this.TOKEN_KEY, token);
-        } catch (error) {
-            console.error('Erro ao salvar token:', error);
-            throw new Error('Não foi possível salvar o token de autenticação');
+        if (!token) {
+            return { success: false, message: 'Token inválido ou expirado' };
         }
-    }
-
-    private setUser(user: User): void {
-        try {
-            localStorage.setItem(this.USER_KEY, JSON.stringify(user));
-        } catch (error) {
-            console.error('Erro ao salvar usuário:', error);
-            throw new Error('Não foi possível salvar os dados do usuário');
-        }
-    }
-
-    // Método para refresh de token (se necessário no futuro)
-    async refreshToken(): Promise<AuthResponse<LoginResponse>> {
-        try {
-            const response = await apiClient.post<LoginResponse>('/auth/refresh');
-
-            this.setToken(response.token);
-
-            return {
-                success: true,
-                data: response,
-                message: 'Token renovado com sucesso'
-            };
-        } catch (error: any) {
-            console.error('Erro ao renovar token:', error);
-
-            this.logout();
-
-            return {
-                success: false,
-                message: 'Não foi possível renovar o token'
-            };
-        }
+        return { success: true, message: 'Token válido' };
     }
 }
 

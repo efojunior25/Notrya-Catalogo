@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Product, ProductFormData } from '../../../types';
 import { Button, Input, Modal } from '../../common';
+import { getImageUrl } from '../../../utils/url';
 import {
     FormContainer,
     FormRow,
@@ -97,15 +98,12 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             });
 
             if (editingProduct.imageUrl) {
-                const fullUrl = editingProduct.imageUrl.startsWith('http')
-                    ? editingProduct.imageUrl
-                    : `http://localhost:8080${editingProduct.imageUrl}`;
+                const fullUrl = getImageUrl(editingProduct.imageUrl);
                 setImagePreview(fullUrl);
                 const filename = editingProduct.imageUrl.split('/').pop();
                 setCurrentImageFile(filename || null);
             }
         } else {
-            // Reset form for new product
             setFormData({
                 name: '',
                 description: '',
@@ -150,7 +148,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             const result = await onUploadImage(file);
 
             if (result.success && result.data) {
-                const fullUrl = `http://localhost:8080${result.data.url}`;
+                const fullUrl = getImageUrl(result.data.url);
                 setImagePreview(fullUrl);
                 setCurrentImageFile(result.data.filename);
                 setFormData(prev => ({ ...prev, imageUrl: result.data.url }));

@@ -1,4 +1,3 @@
-// frontend/src/App.tsx
 import React, { useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Home } from './pages/Home/Home';
@@ -23,7 +22,7 @@ const AppContent: React.FC = () => {
         addToCart,
         removeFromCart,
         removeItemCompletely,
-        updateItemStock,
+        updateQuantity,
         toggleCart,
         closeCart,
         checkout,
@@ -39,18 +38,15 @@ const AppContent: React.FC = () => {
         deleteImage
     } = useProducts();
 
-    // Estados locais da aplicação
     const [isAdminMode, setIsAdminMode] = useState(false);
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
     const [isProductFormOpen, setIsProductFormOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
-    // Handler para login
     const handleLogin = () => {
         setIsLoginModalOpen(true);
     };
 
-    // Handler para submissão do formulário de login
     const handleLoginSubmit = async (values: LoginFormValues) => {
         try {
             const success = await login(values);
@@ -62,39 +58,33 @@ const AppContent: React.FC = () => {
         }
     };
 
-    // Handler para logout
     const handleLogout = () => {
         logout();
         setIsAdminMode(false); // Reset admin mode on logout
     };
 
-    // Handler para clique no carrinho
     const handleCartClick = () => {
         if (!isAdminMode) {
             toggleCart();
         }
     };
 
-    // Handler para alternar modo admin
     const handleAdminToggle = () => {
         if (authState.isAuthenticated) {
             setIsAdminMode(!isAdminMode);
         }
     };
 
-    // Handler para abrir formulário de novo produto
     const handleAddProduct = () => {
         setEditingProduct(null);
         setIsProductFormOpen(true);
     };
 
-    // Handler para editar produto
     const handleEditProduct = (product: Product) => {
         setEditingProduct(product);
         setIsProductFormOpen(true);
     };
 
-    // Handler para deletar produto
     const handleDeleteProduct = async (id: number) => {
         try {
             const result = await deleteProduct(id);
@@ -107,7 +97,6 @@ const AppContent: React.FC = () => {
         }
     };
 
-    // Handler para submissão do formulário de produto
     const handleProductFormSubmit = async (data: ProductFormData) => {
         try {
             let result;
@@ -132,20 +121,17 @@ const AppContent: React.FC = () => {
         }
     };
 
-    // Handler para fechar formulário de produto
     const handleProductFormClose = () => {
         setIsProductFormOpen(false);
         setEditingProduct(null);
     };
 
-    // Handler para adicionar produto ao carrinho
     const handleAddToCart = (product: Product) => {
         if (product.stock > 0) {
             addToCart(product);
         }
     };
 
-    // Handler para checkout do carrinho
     const handleCartCheckout = async () => {
         try {
             await checkout();
@@ -154,55 +140,41 @@ const AppContent: React.FC = () => {
         }
     };
 
-    // Handler para atualizar quantidade no carrinho
     const handleUpdateCartQuantity = (productId: number, quantity: number) => {
         if (quantity <= 0) {
             removeItemCompletely(productId);
         } else {
-            // A lógica de atualização já está no contexto
-            // Aqui podemos implementar uma chamada direta se necessário
             const currentItem = cartState.items.find(item => item.productId === productId);
-            if (currentItem) {
-                const quantityDiff = quantity - currentItem.quantity;
-                if (quantityDiff > 0) {
-                    // Adicionar mais itens
-                    for (let i = 0; i < quantityDiff; i++) {
-                        const product: Product = {
-                            id: productId,
-                            name: currentItem.productName,
-                            price: currentItem.price,
-                            stock: currentItem.stock,
-                            // Outras propriedades necessárias com valores padrão
-                            category: 'CAMISETA',
-                            size: 'M',
-                            color: 'PRETO',
-                            gender: 'UNISSEX',
-                            active: true,
-                        };
-                        addToCart(product, 1);
-                    }
-                } else if (quantityDiff < 0) {
-                    // Remover itens
-                    for (let i = 0; i < Math.abs(quantityDiff); i++) {
-                        removeFromCart(productId, 1);
-                    }
+            if (!currentItem) return;
+
+            const quantityDiff = quantity - currentItem.quantity;
+
+            if (quantityDiff > 0) {
+
+                for (let i = 0; i < quantityDiff; i++) {
+                    addToCart({
+                        id: currentItem.productId,
+                        name: currentItem.productName,
+                        price: currentItem.price,
+                        stock: currentItem.stock,
+                        active: true,
+                    } as Product);
                 }
+            } else if (quantityDiff < 0) {
+                removeFromCart(productId, Math.abs(quantityDiff));
             }
         }
     };
 
-    // Handler para remover item completamente do carrinho
     const handleRemoveCartItem = (productId: number) => {
         removeItemCompletely(productId);
     };
 
-    // Handler para fechar modal de login
     const handleCloseLoginModal = () => {
         setIsLoginModalOpen(false);
         clearError();
     };
 
-    // Handler para fechar carrinho
     const handleCloseCart = () => {
         closeCart();
         clearCartError();
@@ -252,7 +224,6 @@ const AppContent: React.FC = () => {
 
             <Footer />
 
-            {/* Modal de Login */}
             <Modal
                 isOpen={isLoginModalOpen}
                 onClose={handleCloseLoginModal}
@@ -266,7 +237,6 @@ const AppContent: React.FC = () => {
                 />
             </Modal>
 
-            {/* Modal de Formulário de Produto */}
             <ProductForm
                 isOpen={isProductFormOpen}
                 onClose={handleProductFormClose}
@@ -277,7 +247,6 @@ const AppContent: React.FC = () => {
                 title="Produto"
             />
 
-            {/* Carrinho Lateral */}
             <Cart
                 isOpen={cartState.isOpen}
                 items={cartState.items}
@@ -291,7 +260,6 @@ const AppContent: React.FC = () => {
     );
 };
 
-// Componente principal com providers
 const App: React.FC = () => {
     return (
         <AuthProvider>

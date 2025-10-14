@@ -1,5 +1,7 @@
 import React from 'react';
+import DOMPurify from 'dompurify';
 import { Product } from '../../../types';
+import { getImageUrl } from '../../../utils/url';
 import { Button } from '../../common';
 import {
     CardContainer,
@@ -34,12 +36,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                                                             onEdit,
                                                             onDelete,
                                                         }) => {
-    const getImageUrl = (imageUrl?: string): string => {
-        if (!imageUrl) return '';
-        if (imageUrl.startsWith('http')) return imageUrl;
-        return `http://localhost:8080${imageUrl}`;
-    };
-
     const formatPrice = (price: number): string => {
         return new Intl.NumberFormat('pt-BR', {
             style: 'currency',
@@ -180,12 +176,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                         📷
                     </NoImagePlaceholder>
                 )}
-                <NoImagePlaceholder
-                    className="no-image-placeholder"
-                    style={{ display: product.imageUrl ? 'none' : 'flex' }}
-                >
-                    📷
-                </NoImagePlaceholder>
             </ImageContainer>
 
             <CardContent>
@@ -196,7 +186,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 )}
 
                 {product.description && (
-                    <ProductDescription>{product.description}</ProductDescription>
+                    <ProductDescription>
+                        {DOMPurify.sanitize(product.description || '')}
+                    </ProductDescription>
                 )}
 
                 <ProductPrice>{formatPrice(product.price)}</ProductPrice>

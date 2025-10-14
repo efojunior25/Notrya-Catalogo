@@ -7,6 +7,19 @@ class ApiClient {
         this.baseURL = baseURL;
     }
 
+    private getAuthHeaders(): HeadersInit {
+        const token = localStorage.getItem('token');
+        const headers: HeadersInit = {
+            'Content-Type': 'application/json',
+        };
+
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        return headers;
+    }
+
     private async request<T>(
         endpoint: string,
         options: RequestInit = {}
@@ -14,30 +27,33 @@ class ApiClient {
         const url = `${this.baseURL}${endpoint}`;
 
         const config: RequestInit = {
+            ...options,
             headers: {
-                'Content-Type': 'application/json',
+                ...this.getAuthHeaders(),
                 ...options.headers,
             },
-            ...options,
         };
-
-        // Add auth token if available
-        const token = localStorage.getItem('token');
-        if (token) {
-            config.headers = {
-                ...config.headers,
-                Authorization: `Bearer ${token}`,
-            };
-        }
 
         try {
             const response = await fetch(url, config);
 
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                let errorMessage = `HTTP error! status: ${response.status}`;
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.message || errorData.error || errorMessage;
+                } catch {
+                }
+
+                throw new Error(errorMessage);
             }
 
-            return await response.json();
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                return await response.json();
+            }
+
+            return {} as T;
         } catch (error) {
             console.error('API request failed:', error);
             throw error;
@@ -68,15 +84,29 @@ class ApiClient {
 
     async upload<T>(endpoint: string, formData: FormData): Promise<T> {
         const url = `${this.baseURL}${endpoint}`;
+        const token = localStorage.getItem('token');
+
+        const config: RequestInit = {
+            method: 'POST',
+            body: formData,
+        };
+
+        if (token) {
+            const headers = new Headers();
+            headers.append('Authorization', `Bearer ${token}`);
+            config.headers = headers;
+        }
 
         try {
-            const response = await fetch(url, {
-                method: 'POST',
-                body: formData,
-            });
+            const response = await fetch(url, config);
 
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                let errorMessage = `HTTP error! status: ${response.status}`;
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.message || errorData.error || errorMessage;
+                } catch {}
+                throw new Error(errorMessage);
             }
 
             return await response.json();
@@ -87,4 +117,6 @@ class ApiClient {
     }
 }
 
-export const apiClient = new ApiClient('http://localhost:8080/api/v1');
+export const apiClient = new ApiClient(
+    process.env.REACT_APP_API_URL || 'http://localhost:8080/api/v1'
+);

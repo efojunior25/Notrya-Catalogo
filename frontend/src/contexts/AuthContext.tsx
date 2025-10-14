@@ -73,27 +73,47 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     useEffect(() => {
         const initAuth = async () => {
-            const token = authService.getToken();
-            if (token) {
-                dispatch({ type: 'AUTH_START' });
+            try {
+                const token = authService.getToken();
+                if (token) {
+                    dispatch({ type: 'AUTH_START' });
+                    const response = await authService.validateToken();
 
-                const response = await authService.validateToken();
-                if (response.success) {
-                    const user = authService.getCurrentUser();
-                    if (user) {
-                        dispatch({ type: 'AUTH_SUCCESS', payload: user });
+                    if (response.success) {
+                        const user = authService.getCurrentUser();
+                        if (user) {
+                            dispatch({ type: 'AUTH_SUCCESS', payload: user });
+                        } else {
+                            dispatch({ type: 'LOGOUT' });
+                        }
                     } else {
+                        authService.logout();
                         dispatch({ type: 'LOGOUT' });
                     }
-                } else {
-                    authService.logout();
-                    dispatch({ type: 'LOGOUT' });
                 }
+            } catch (error) {
+                console.error('Auth initialization failed:', error);
+                authService.logout();
+                dispatch({ type: 'LOGOUT' });
             }
         };
 
         initAuth();
     }, []);
+
+    const sanitizeErrorMessage = (error: any): string => {
+        const message = error?.message || 'Erro desconhecido';
+
+        const sanitized = message
+            .replace(/https?:\/\/[^\s]+/g, '[URL removida]')
+            .replace(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/g, '[IP removido]');
+
+        if (process.env.NODE_ENV === 'production') {
+            return 'Erro ao processar sua solicitação. Tente novamente.';
+        }
+
+        return sanitized;
+    };
 
     const login = async (credentials: LoginRequest): Promise<boolean> => {
         dispatch({ type: 'AUTH_START' });
@@ -109,7 +129,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             dispatch({ type: 'AUTH_SUCCESS', payload: user });
             return true;
         } else {
-            dispatch({ type: 'AUTH_ERROR', payload: response.message });
+            dispatch({ type: 'AUTH_ERROR', payload: sanitizeErrorMessage(response) });
             return false;
         }
     };

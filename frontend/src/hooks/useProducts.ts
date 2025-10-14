@@ -10,12 +10,8 @@ export const useProducts = (pageSize: number = 6) => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Ref para evitar múltiplas chamadas concorrentes
     const isLoadingRef = useRef(false);
-
-    // Guardar pageSize estável
-    const pageSizeRef = useRef(pageSize);
-    pageSizeRef.current = pageSize;
+    const isMountedRef = useRef(false);
 
     const fetchProducts = useCallback(async (search: string, page: number) => {
         if (isLoadingRef.current) return;
@@ -27,52 +23,46 @@ export const useProducts = (pageSize: number = 6) => {
         try {
             const data: ProductPage = await productService.getProducts({
                 page,
-                size: pageSizeRef.current,
+                size: pageSize,
                 search: search || '',
             });
 
             setProducts(data.content || []);
             setTotalPages(data.totalPages || 0);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to fetch products');
+            const errorMessage = err instanceof Error ? err.message : 'Failed to fetch products';
+            setError(errorMessage);
             setProducts([]);
         } finally {
             isLoadingRef.current = false;
             setIsLoading(false);
         }
-    }, []);
+    }, [pageSize]);
 
-    // 🔹 Buscar ao mudar searchTerm (com debounce) – não altera currentPage
     useEffect(() => {
+        if (!isMountedRef.current) {
+            isMountedRef.current = true;
+            fetchProducts('', 0);
+        }
+    }, [fetchProducts]);
+
+    useEffect(() => {
+        if (!isMountedRef.current) return; // Evita busca na montagem
+
         const timeoutId = setTimeout(() => {
-            fetchProducts(searchTerm, 0);
             setCurrentPage(0);
+            fetchProducts(searchTerm, 0);
         }, 500);
 
         return () => clearTimeout(timeoutId);
     }, [searchTerm, fetchProducts]);
 
-    // 🔹 Buscar ao mudar página (exceto página inicial já buscada)
     useEffect(() => {
-        if (currentPage > 0) {
-            fetchProducts(searchTerm, currentPage);
-        }
+        if (!isMountedRef.current) return;
+        if (currentPage === 0) return; // Evita duplicação na primeira página
+
+        fetchProducts(searchTerm, currentPage);
     }, [currentPage, fetchProducts, searchTerm]);
-
-    // 🔹 Primeira carga (só uma vez)
-    useEffect(() => {
-        fetchProducts('', 0);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    // 🔹 Buscar ao mudar pageSize (sem depender do searchTerm)
-    useEffect(() => {
-        if (pageSizeRef.current !== pageSize) {
-            pageSizeRef.current = pageSize;
-            setCurrentPage(0);
-            fetchProducts(searchTerm, 0);
-        }
-    }, [pageSize, fetchProducts, searchTerm]);
 
     const createProduct = async (productData: ProductFormData) => {
         try {
@@ -103,7 +93,10 @@ export const useProducts = (pageSize: number = 6) => {
     const deleteProduct = async (id: number) => {
         try {
             await productService.deleteProduct(id);
-            const newCurrentPage = products.length === 1 && currentPage > 0 ? currentPage - 1 : currentPage;
+            // Se deletar o último item da página, volta uma página
+            const newCurrentPage = products.length === 1 && currentPage > 0
+                ? currentPage - 1
+                : currentPage;
             setCurrentPage(newCurrentPage);
             await fetchProducts(searchTerm, newCurrentPage);
             return { success: true };

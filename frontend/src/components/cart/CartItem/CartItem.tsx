@@ -1,6 +1,7 @@
-// frontend/src/components/cart/CartItem/CartItem.tsx
 import React from 'react';
+import DOMPurify from 'dompurify';
 import { CartItem as CartItemType } from '../../../types';
+import { getImageUrl } from '../../../utils/url';
 import {
     ItemContainer,
     ItemImageContainer,
@@ -40,12 +41,6 @@ export const CartItem: React.FC<CartItemProps> = ({
         }).format(price);
     };
 
-    const getImageUrl = (imageUrl?: string): string | undefined => {
-        if (!imageUrl) return undefined;
-        if (imageUrl.startsWith('http')) return imageUrl;
-        return `http://localhost:8080${imageUrl}`;
-    };
-
     const handleQuantityDecrease = () => {
         if (item.quantity > 1) {
             onUpdateQuantity(item.productId, item.quantity - 1);
@@ -76,7 +71,6 @@ export const CartItem: React.FC<CartItemProps> = ({
                         src={getImageUrl(item.imageUrl)}
                         alt={item.productName}
                         onError={(e) => {
-                            // Se a imagem falhar, esconder e mostrar placeholder
                             (e.target as HTMLImageElement).style.display = 'none';
                             const container = (e.target as HTMLImageElement).parentElement;
                             if (container) {

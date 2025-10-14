@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { ModalOverlay, ModalContainer, ModalHeader, ModalTitle, CloseButton, ModalContent } from './Modal.styles';
@@ -26,14 +25,12 @@ export const Modal: React.FC<ModalProps> = ({
         };
 
         if (isOpen) {
-            // Salva o estado atual do overflow
             const originalOverflow = document.body.style.overflow;
             document.addEventListener('keydown', handleEscapeKey);
             document.body.style.overflow = 'hidden';
 
             return () => {
                 document.removeEventListener('keydown', handleEscapeKey);
-                // Restaura o estado original ou remove se estava vazio
                 if (originalOverflow) {
                     document.body.style.overflow = originalOverflow;
                 } else {
@@ -42,12 +39,11 @@ export const Modal: React.FC<ModalProps> = ({
             };
         }
 
-        // Cleanup vazio quando modal não está aberto
         return () => {};
-    }, [isOpen]); // Remove onClose das dependências
+    }, [isOpen]);
 
     const handleOverlayClick = (event: React.MouseEvent<HTMLDivElement>) => {
-        if (event.target === event.currentTarget && typeof onClose === 'function') {
+        if (event.target === event.currentTarget) {
             onClose();
         }
     };

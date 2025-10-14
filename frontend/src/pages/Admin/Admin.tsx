@@ -1,4 +1,3 @@
-// frontend/src/pages/Admin/Admin.tsx - VERSÃO CORRIGIDA
 import React, { useState, useEffect } from 'react';
 import {
     AdminContainer,
@@ -37,11 +36,10 @@ export const Admin: React.FC<AdminProps> = ({
         isLoading,
         error,
         refetch,
-    } = useProducts(12); // Mais produtos por página no admin
+    } = useProducts(12);
 
     const PAGE_SIZE = 12;
 
-    // Listas para os filtros
     const categories = [
         'CAMISETA', 'CALCA', 'BERMUDA', 'SHORTS', 'VESTIDO', 'SAIA',
         'BLUSA', 'JAQUETA', 'CASACO', 'TENIS', 'SAPATO', 'SANDALIA',
@@ -50,29 +48,17 @@ export const Admin: React.FC<AdminProps> = ({
 
     const genders = ['MASCULINO', 'FEMININO', 'UNISSEX'];
 
-    // Buscar produtos com filtros
     useEffect(() => {
         const timeoutId = setTimeout(() => {
             setCurrentPage(0);
-            // @ts-ignore
-            refetch({
-                search: searchTerm,
-                page: 0,
-                size: PAGE_SIZE,
-            });
+            refetch();
         }, 300);
-
         return () => clearTimeout(timeoutId);
-    }, [searchTerm, selectedCategory, selectedGender, refetch]);
+    }, [searchTerm, selectedCategory, selectedGender]);
 
     useEffect(() => {
-        // @ts-ignore
-        refetch({
-            search: searchTerm,
-            page: currentPage,
-            size: PAGE_SIZE,
-        });
-    }, [currentPage, refetch, searchTerm]);
+        refetch();
+    }, [currentPage, searchTerm]);
 
     const handlePreviousPage = () => {
         setCurrentPage(prev => Math.max(0, prev - 1));
@@ -98,7 +84,6 @@ export const Admin: React.FC<AdminProps> = ({
         });
     };
 
-    // Calcular estatísticas
     const totalProducts = products.length;
     const activeProducts = products.filter(p => p.active).length;
     const lowStockProducts = products.filter(p => p.stock < 5).length;

@@ -1,14 +1,23 @@
 import styled from 'styled-components';
 
+export const ModalOverlay = styled.div`
+    position: fixed;
+    inset: 0; /* ocupa toda a tela */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.5); /* fundo escurecido */
+    z-index: 1000;
+`;
+
 export const FormWrapper = styled.div`
     width: 100%;
     max-width: 420px;
-    margin: 0 auto;
     background: ${({ theme }) => theme.colors.background.secondary};
     border: 1px solid ${({ theme }) => theme.colors.border.light};
     border-radius: ${({ theme }) => theme.borderRadius.lg};
     padding: 1.5rem;
-    box-shadow: ${({ theme }) => theme.shadows.sm};
+    box-shadow: ${({ theme }) => theme.shadows.md};
 `;
 
 export const FormHeader = styled.div`

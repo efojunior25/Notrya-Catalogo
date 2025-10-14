@@ -14,7 +14,7 @@ type CartAction =
     | { type: 'ADD_ITEM'; payload: { product: Product; quantity?: number } }
     | { type: 'REMOVE_ITEM'; payload: { productId: number; quantity?: number } }
     | { type: 'REMOVE_ITEM_COMPLETELY'; payload: number }
-    | { type: 'UPDATE_ITEM_STOCK'; payload: { productId: number; stock: number } }
+    | { type: 'UPDATE_QUANTITY'; payload: { productId: number; quantity: number } }
     | { type: 'CLEAR_CART' }
     | { type: 'TOGGLE_CART' }
     | { type: 'OPEN_CART' }
@@ -38,7 +38,7 @@ const CartContext = createContext<{
     addToCart: (product: Product, quantity?: number) => void;
     removeFromCart: (productId: number, quantity?: number) => void;
     removeItemCompletely: (productId: number) => void;
-    updateItemStock: (productId: number, stock: number) => void;
+    updateQuantity: (productId: number, quantity: number) => void;
     clearCart: () => void;
     toggleCart: () => void;
     openCart: () => void;
@@ -58,15 +58,18 @@ function cartReducer(state: CartState, action: CartAction): CartState {
             let updatedItems: CartItem[];
 
             if (existingItem) {
-                if (existingItem.stock <= 0) {
+                // ✅ Verificar se a quantidade total não excede o stock REAL
+                const newQuantity = existingItem.quantity + quantity;
+                if (newQuantity > product.stock) {
                     return {
                         ...state,
-                        error: 'Quantidade máxima atingida',
+                        error: `Apenas ${product.stock} unidades disponíveis`,
                     };
                 }
+
                 updatedItems = state.items.map(item =>
                     item.productId === product.id
-                        ? { ...item, quantity: item.quantity + quantity, stock: item.stock - quantity }
+                        ? { ...item, quantity: newQuantity }
                         : item
                 );
             } else {
@@ -76,12 +79,21 @@ function cartReducer(state: CartState, action: CartAction): CartState {
                         error: 'Produto fora de estoque',
                     };
                 }
+
+                if (quantity > product.stock) {
+                    return {
+                        ...state,
+                        error: `Apenas ${product.stock} unidades disponíveis`,
+                    };
+                }
+
                 const newItem: CartItem = {
                     productId: product.id,
                     productName: product.name,
                     price: product.price,
                     quantity,
-                    stock: product.stock - quantity,
+                    stock: product.stock, // ✅ Guardar stock real
+                    imageUrl: product.imageUrl,
                 };
                 updatedItems = [...state.items, newItem];
             }
@@ -104,7 +116,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
             if (existingItem.quantity > quantity) {
                 updatedItems = state.items.map(item =>
                     item.productId === productId
-                        ? { ...item, quantity: item.quantity - quantity, stock: item.stock + quantity }
+                        ? { ...item, quantity: item.quantity - quantity }
                         : item
                 );
             } else {
@@ -118,22 +130,40 @@ function cartReducer(state: CartState, action: CartAction): CartState {
         }
 
         case 'REMOVE_ITEM_COMPLETELY': {
-            const productId = action.payload;
             return {
                 ...state,
-                items: state.items.filter(item => item.productId !== productId),
+                items: state.items.filter(item => item.productId !== action.payload),
             };
         }
 
-        case 'UPDATE_ITEM_STOCK': {
-            const { productId, stock } = action.payload;
+        case 'UPDATE_QUANTITY': {
+            const { productId, quantity } = action.payload;
+
+            // ✅ Remover se quantidade for 0 ou negativa
+            if (quantity <= 0) {
+                return {
+                    ...state,
+                    items: state.items.filter(item => item.productId !== productId),
+                };
+            }
+
+            // ✅ Verificar stock antes de atualizar
+            const item = state.items.find(i => i.productId === productId);
+            if (item && quantity > item.stock) {
+                return {
+                    ...state,
+                    error: `Apenas ${item.stock} unidades disponíveis`,
+                };
+            }
+
             return {
                 ...state,
                 items: state.items.map(item =>
                     item.productId === productId
-                        ? { ...item, stock }
+                        ? { ...item, quantity }
                         : item
                 ),
+                error: null,
             };
         }
 
@@ -235,8 +265,8 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         dispatch({ type: 'REMOVE_ITEM_COMPLETELY', payload: productId });
     };
 
-    const updateItemStock = (productId: number, stock: number) => {
-        dispatch({ type: 'UPDATE_ITEM_STOCK', payload: { productId, stock } });
+    const updateQuantity = (productId: number, quantity: number) => {
+        dispatch({ type: 'UPDATE_QUANTITY', payload: { productId, quantity } });
     };
 
     const clearCart = () => {
@@ -276,6 +306,9 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (response.success) {
             dispatch({ type: 'CHECKOUT_SUCCESS', payload: response.data as OrderResponse });
             cartService.clearCart();
+
+            // ✅ Mostrar mensagem de sucesso
+            alert(`Pedido #${(response.data as OrderResponse).id} criado com sucesso!`);
         } else {
             const stockErrors = Array.isArray(response.data) ? response.data : [];
             dispatch({
@@ -285,6 +318,14 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     stockErrors,
                 },
             });
+
+            // ✅ Mostrar erros de estoque
+            if (stockErrors.length > 0) {
+                const errorMessages = stockErrors
+                    .map(err => `${err.productName || 'Produto'}: apenas ${err.available} disponíveis`)
+                    .join('\n');
+                alert(`Erro de estoque:\n${errorMessages}`);
+            }
         }
     };
 
@@ -307,7 +348,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 addToCart,
                 removeFromCart,
                 removeItemCompletely,
-                updateItemStock,
+                updateQuantity,
                 clearCart,
                 toggleCart,
                 openCart,
