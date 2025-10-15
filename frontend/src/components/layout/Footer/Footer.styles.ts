@@ -5,6 +5,7 @@ export const FooterContainer = styled.footer`
     border-top: 1px solid ${({ theme }) => theme.colors.border.light};
     background: ${({ theme }) => theme.colors.background.secondary};
     color: ${({ theme }) => theme.colors.text.secondary};
+    flex-shrink: 0;
 `;
 
 export const FooterContent = styled.div`

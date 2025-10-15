@@ -82,6 +82,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     const genders = ['MASCULINO', 'FEMININO', 'UNISSEX'];
 
     useEffect(() => {
+        console.log('ProductForm - isOpen:', isOpen);
+        console.log('ProductForm - editingProduct:', editingProduct);
+
         if (editingProduct) {
             setFormData({
                 name: editingProduct.name,
@@ -104,6 +107,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 setCurrentImageFile(filename || null);
             }
         } else {
+            // Reset form para novo produto
             setFormData({
                 name: '',
                 description: '',
@@ -120,7 +124,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             setImagePreview(null);
             setCurrentImageFile(null);
         }
-    }, [editingProduct]);
+    }, [editingProduct, isOpen]);
 
     const handleInputChange = (field: keyof ProductFormData, value: string | number) => {
         setFormData(prev => ({ ...prev, [field]: value }));
@@ -179,6 +183,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        console.log('Form submitted:', formData);
         setIsSubmitting(true);
 
         try {
@@ -194,6 +199,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             setIsSubmitting(false);
         }
     };
+
+    console.log('ProductForm rendering - isOpen:', isOpen);
 
     return (
         <Modal

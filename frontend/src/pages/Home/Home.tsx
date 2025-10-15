@@ -1,10 +1,10 @@
-import React from 'react';
-import { HomeContainer, SearchSection, ProductsSection, PaginationWrapper } from './Home.styles';
-import { ProductGrid } from '../../components/product';
-import { Input, Button, Loading } from '../../components/common';
+import React, { useState, useEffect } from 'react';
+import { Product } from '../../types';
 import { useProducts } from '../../hooks/useProducts';
 import { useAuth } from '../../contexts/AuthContext';
-import { Product } from '../../types';
+import { ProductGrid } from '../../components/product';
+import { Input, Button, Loading } from '../../components/common';
+import { HomeContainer, SearchSection, ProductsSection, PaginationWrapper } from './Home.styles';
 
 interface HomeProps {
     onAddToCart: (product: Product) => void;
@@ -23,7 +23,25 @@ export const Home: React.FC<HomeProps> = ({
                                           }) => {
     const { state: authState } = useAuth();
 
-    // Hook que já controla busca, paginação e debounce
+    // ✅ Detectar tamanho da tela para ajustar pageSize
+    const [pageSize, setPageSize] = useState(9); // Desktop padrão: 9 itens (3x3)
+
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth < 640) {
+                setPageSize(6); // Mobile: 6 itens (1 coluna)
+            } else if (window.innerWidth < 1024) {
+                setPageSize(6); // Tablet: 6 itens (2 colunas)
+            } else {
+                setPageSize(9); // Desktop: 9 itens (3 colunas)
+            }
+        };
+
+        handleResize(); // Executar na montagem
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     const {
         products,
         currentPage,
@@ -33,7 +51,7 @@ export const Home: React.FC<HomeProps> = ({
         setCurrentPage,
         setSearchTerm,
         refetch,
-    } = useProducts(6); // 6 produtos por página
+    } = useProducts(pageSize);
 
     const handlePreviousPage = () => {
         setCurrentPage(prev => Math.max(0, prev - 1));
@@ -68,10 +86,7 @@ export const Home: React.FC<HomeProps> = ({
                     <p style={{ margin: 0, color: '#5F6368' }}>
                         {error}
                     </p>
-                    <Button
-                        variant="primary"
-                        onClick={handleRetry}
-                    >
+                    <Button variant="primary" onClick={handleRetry}>
                         🔄 Tentar Novamente
                     </Button>
                 </div>
@@ -88,15 +103,7 @@ export const Home: React.FC<HomeProps> = ({
                     onChange={handleSearch}
                     fullWidth
                 />
-                {isAdminMode && authState.isAuthenticated && onOpenProductForm && (
-                    <Button
-                        variant="primary"
-                        onClick={onOpenProductForm}
-                        style={{ marginLeft: '1rem', flexShrink: 0 }}
-                    >
-                        ➕ Novo Produto
-                    </Button>
-                )}
+                {/* ✅ REMOVIDO - Botão duplicado */}
             </SearchSection>
 
             <ProductsSection>

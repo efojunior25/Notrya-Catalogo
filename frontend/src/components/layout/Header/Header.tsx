@@ -57,8 +57,9 @@ export const Header: React.FC<HeaderProps> = ({
                     <span className="tagline">Moda Moderna</span>
                 </Logo>
 
+                {/* ✅ BOTÃO APARECE APENAS UMA VEZ NO HEADER */}
                 <Navigation>
-                    {isAdminMode && onAddProductClick && (
+                    {isAdminMode && isAuthenticated && onAddProductClick && (
                         <Button
                             variant="secondary"
                             size="small"
@@ -86,8 +87,8 @@ export const Header: React.FC<HeaderProps> = ({
                             >
                                 <span className="icon">⚙️</span>
                                 <span className="text">
-                  {isAdminMode ? 'Modo Cliente' : 'Admin'}
-                </span>
+                                    {isAdminMode ? 'Modo Cliente' : 'Admin'}
+                                </span>
                             </AdminToggle>
                             <LogoutButton onClick={onLogout}>
                                 <span className="icon">🚪</span>

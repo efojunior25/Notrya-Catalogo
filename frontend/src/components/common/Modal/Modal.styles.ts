@@ -14,11 +14,11 @@ const fadeIn = keyframes`
 const slideIn = keyframes`
     from {
         opacity: 0;
-        transform: translate(-50%, -60%);
+        transform: scale(0.95);
     }
     to {
         opacity: 1;
-        transform: translate(-50%, -50%);
+        transform: scale(1);
     }
 `;
 
@@ -34,8 +34,26 @@ const modalSizes = {
     full: '95vw',
 };
 
+// ✅ MODAL CENTRALIZADO CORRETAMENTE - VERSÃO FINAL
 export const ModalOverlay = styled.div<{ $isOpen: boolean }>`
-    display: ${({ $isOpen }) => $isOpen ? 'flex' : 'none'};
+    display: ${({ $isOpen }) => ($isOpen ? 'flex' : 'none')};
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: ${theme.zIndex.modal};
+    animation: ${fadeIn} 0.2s ease-out;
+
+    /* CENTRALIZAÇÃO PERFEITA */
+    align-items: center;
+    justify-content: center;
+    padding: ${theme.spacing[4]};
+    overflow-y: auto;
 `;
 
 export const ModalContainer = styled.div<ModalStyleProps>`
@@ -43,12 +61,15 @@ export const ModalContainer = styled.div<ModalStyleProps>`
     border-radius: ${theme.borderRadius.xl};
     box-shadow: ${theme.shadows.xl};
     width: 100%;
-    max-width: ${({ size }: { size?: 'small'|'medium'|'large'|'full' }) => modalSizes[size || 'medium']};
+    max-width: ${({ size }) => modalSizes[size || 'medium']};
     max-height: 90vh;
     overflow: hidden;
     position: relative;
     animation: ${slideIn} 0.3s ease-out;
-    margin: ${theme.spacing[4]};
+
+    /* Remove posicionamento absoluto problemático */
+    display: flex;
+    flex-direction: column;
 
     ${mixins.mobile} {
         max-width: 95vw;
@@ -57,15 +78,12 @@ export const ModalContainer = styled.div<ModalStyleProps>`
     }
 `;
 
-
 export const ModalHeader = styled.div`
     ${mixins.flexBetween}
     padding: ${theme.spacing[6]} ${theme.spacing[6]} ${theme.spacing[4]};
     border-bottom: 1px solid ${theme.colors.neutral.gray[200]};
-    position: sticky;
-    top: 0;
+    flex-shrink: 0;
     background: ${theme.colors.neutral.white};
-    z-index: 1;
 `;
 
 export const ModalTitle = styled.h2`
@@ -102,7 +120,26 @@ export const CloseButton = styled.button`
 export const ModalContent = styled.div`
     padding: ${theme.spacing[6]};
     overflow-y: auto;
-    max-height: calc(90vh - 100px);
+    flex: 1;
+
+    /* Scroll customizado */
+    &::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: ${theme.colors.neutral.gray[100]};
+        border-radius: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: ${theme.colors.neutral.gray[400]};
+        border-radius: 4px;
+
+        &:hover {
+            background: ${theme.colors.neutral.gray[500]};
+        }
+    }
 
     ${mixins.mobile} {
         padding: ${theme.spacing[4]};

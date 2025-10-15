@@ -19,28 +19,22 @@ export const Modal: React.FC<ModalProps> = ({
                                             }) => {
     useEffect(() => {
         const handleEscapeKey = (event: KeyboardEvent) => {
-            if (event.key === 'Escape' && typeof onClose === 'function') {
+            if (event.key === 'Escape' && isOpen) {
                 onClose();
             }
         };
 
         if (isOpen) {
-            const originalOverflow = document.body.style.overflow;
-            document.addEventListener('keydown', handleEscapeKey);
+            // Bloquear scroll do body quando modal está aberto
             document.body.style.overflow = 'hidden';
+            document.addEventListener('keydown', handleEscapeKey);
 
             return () => {
+                document.body.style.overflow = '';
                 document.removeEventListener('keydown', handleEscapeKey);
-                if (originalOverflow) {
-                    document.body.style.overflow = originalOverflow;
-                } else {
-                    document.body.style.removeProperty('overflow');
-                }
             };
         }
-
-        return () => {};
-    }, [isOpen]);
+    }, [isOpen, onClose]);
 
     const handleOverlayClick = (event: React.MouseEvent<HTMLDivElement>) => {
         if (event.target === event.currentTarget) {
@@ -48,31 +42,32 @@ export const Modal: React.FC<ModalProps> = ({
         }
     };
 
-    const handleCloseClick = () => {
-        if (typeof onClose === 'function') {
-            onClose();
-        }
-    };
-
     if (!isOpen) return null;
 
-    return ReactDOM.createPortal(
+    const modalContent = (
         <ModalOverlay $isOpen={isOpen} onClick={handleOverlayClick}>
-            <ModalContainer size={size} onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}>
+            <ModalContainer size={size} onClick={(e) => e.stopPropagation()}>
                 {title && (
                     <ModalHeader>
                         <ModalTitle>{title}</ModalTitle>
-                        <CloseButton onClick={handleCloseClick}>✕</CloseButton>
+                        <CloseButton onClick={onClose} aria-label="Fechar modal">
+                            ✕
+                        </CloseButton>
                     </ModalHeader>
                 )}
-                {!title && typeof onClose === 'function' && (
+                {!title && (
                     <ModalHeader>
-                        <CloseButton onClick={handleCloseClick}>✕</CloseButton>
+                        <div></div>
+                        <CloseButton onClick={onClose} aria-label="Fechar modal">
+                            ✕
+                        </CloseButton>
                     </ModalHeader>
                 )}
                 <ModalContent>{children}</ModalContent>
             </ModalContainer>
-        </ModalOverlay>,
-        document.body
+        </ModalOverlay>
     );
+
+    // Renderizar no body usando portal
+    return ReactDOM.createPortal(modalContent, document.body);
 };
